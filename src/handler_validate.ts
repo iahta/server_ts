@@ -1,49 +1,38 @@
-import { ChildProcess } from "child_process";
-import { error } from "console";
 import express from "express";
 
 export async function handlerValidate(req: express.Request, res: express.Response) {
-    let body = "";
+    type parameters = {
+        body: string;
+    }
+    
+    try {
+        const params: parameters = req.body;
 
-    req.on("data", (chunk) => {
-        body += chunk;
-    });
-
-    req.on("end", () => {
-        let statusCode = 200;
-        let respBody = {};
-
-        try {
-            const parsedBody = JSON.parse(body);
-
-            if (!parsedBody.body) {
-                statusCode = 400;
-                respBody = {
-                    error: "Something went wrong"
-                };
-            } else if (parsedBody.body.length > 140) {
-                statusCode = 400;
-                respBody = {
-                    error: "Chirp is too long"
-                };
-            } else {
-                respBody = {
-                    valid: true
-                };
-            }
-        } catch (error) {
-            statusCode = 400;
-            respBody = {
-                error: "Something went wrong"
-            }
+        if (!params.body) {
+            return res.status(400).json({ error: "Something went wrong" });
         }
-        res.header("Content-Type", "application/json");
-        res.status(statusCode).send(JSON.stringify(respBody))
-    });
-
-    res.on("error", (err) => {
-        res.status(500).json({
-            error: "Server error"
+        if (params.body.length > 140) {
+            return res.status(400).json({ error: "Chirp is too long" });
+        }
+        let cleaned = cleanChirp(params.body);
+        return res.status(200).json({
+            cleanedBody: cleaned
         });
-    })
+    } catch (error) {
+        return res.status(400).json({
+            error: "Something went wrong"
+        })
+    }
+}
+
+function cleanChirp(chirp: string): string {
+    const profanity = ["kerfuffle", "sharbert", "fornax"];
+
+    let split = chirp.split(" ")
+    for (let i = 0; i < split.length; i++) {
+        if (profanity.includes(split[i].toLowerCase())) {
+            split[i] = "****";
+        };
+    }
+    return split.join(" ")
 }
