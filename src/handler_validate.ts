@@ -1,28 +1,20 @@
 import express from "express";
+import { BadRequestError } from "./error_handler.js";
 
 export async function handlerValidate(req: express.Request, res: express.Response) {
     type parameters = {
         body: string;
     }
     
-    try {
-        const params: parameters = req.body;
+    const params: parameters = req.body;
 
-        if (!params.body) {
-            return res.status(400).json({ error: "Something went wrong" });
-        }
-        if (params.body.length > 140) {
-            return res.status(400).json({ error: "Chirp is too long" });
-        }
-        let cleaned = cleanChirp(params.body);
-        return res.status(200).json({
-            cleanedBody: cleaned
-        });
-    } catch (error) {
-        return res.status(400).json({
-            error: "Something went wrong"
-        })
+    if (params.body.length > 140) {
+        throw new BadRequestError ("Chirp is too long. Max length is 140");
     }
+    let cleaned = cleanChirp(params.body);
+    return res.status(200).json({
+        cleanedBody: cleaned
+    });
 }
 
 function cleanChirp(chirp: string): string {
