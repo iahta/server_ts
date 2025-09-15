@@ -9,3 +9,17 @@ export async function createUser(user: NewUser) {
     .returning();
   return result;
 }
+
+export async function deleteAllUsers() {
+    await db.delete(users)
+}
+
+export async function getUserId(email: string) {
+    const result = await db.query.users.findFirst({
+        with: {
+            email: email
+        }
+    })
+    return result;
+}
+
