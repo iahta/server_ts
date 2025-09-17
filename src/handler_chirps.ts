@@ -1,7 +1,8 @@
 import express from "express";
 import { BadRequestError } from "./error_handler.js";
 import { NewChirp } from "./db/schema.js";
-import { createChirp } from "./db/queries/chirps.js";
+import { createChirp, getAllChirps } from "./db/queries/chirps.js";
+import { get } from "http";
 
 export async function handlerChirp(req: express.Request, res: express.Response) {
     type parameters = {
@@ -45,4 +46,9 @@ function cleanChirp(chirp: string): string {
         };
     }
     return split.join(" ")
+}
+
+export async function handlerAllChirps(req: express.Request, res: express.Response) {
+    const chirps = await getAllChirps();
+    return res.status(200).json(chirps);
 }
