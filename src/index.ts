@@ -9,7 +9,7 @@ import { handlerValidate } from "./handler_validate.js";
 import { errorHandler } from "./error_handler.js";
 import { config } from "./config.js";
 import { handlerCreateUser } from "./handler_users.js";
-import { handlerAllChirps, handlerChirp } from "./handler_chirps.js";
+import { handlerAllChirps, handlerChirp, handlerGetChirp } from "./handler_chirps.js";
 
 const migrationClient = postgres(config.db.dbURL, { max: 1});
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -23,6 +23,7 @@ app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 app.get("/api/healthz", handlerReadiness);
 app.get("/admin/metrics", handlerHits);
 app.get("/api/chirps", handlerAllChirps);
+app.get("/api/chirps/:chirpID", handlerGetChirp);
 app.post("/admin/reset", handlerReset);
 app.post("/api/chirps", handlerChirp);
 app.post("/api/users", handlerCreateUser);
