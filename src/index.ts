@@ -8,7 +8,7 @@ import { handlerHits, handlerReset } from "./handler_hits.js";
 import { handlerValidate } from "./handler_validate.js";
 import { errorHandler } from "./error_handler.js";
 import { config } from "./config.js";
-import { handlerCreateUser } from "./handler_users.js";
+import { handlerCreateUser, handlerLogin } from "./handler_users.js";
 import { handlerAllChirps, handlerChirp, handlerGetChirp } from "./handler_chirps.js";
 
 const migrationClient = postgres(config.db.dbURL, { max: 1});
@@ -27,6 +27,7 @@ app.get("/api/chirps/:chirpID", handlerGetChirp);
 app.post("/admin/reset", handlerReset);
 app.post("/api/chirps", handlerChirp);
 app.post("/api/users", handlerCreateUser);
+app.post("/api/login", handlerLogin);
 
 app.use(errorHandler);
 app.listen(config.api.port, () => {
