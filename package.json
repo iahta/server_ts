@@ -7,7 +7,7 @@
     "build": "npx tsc",
     "start": "node dist/index.js",
     "dev": "npx tsc && node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest --run",
     "generate": "drizzle-kit generate",
     "migrate": "drizzle-kit migrate"
   },
@@ -26,14 +26,17 @@
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.1",
     "drizzle-kit": "^0.31.4",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "drizzle-orm": "^0.44.5",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "postgres": "^3.4.7"
   }
 }

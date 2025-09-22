@@ -49,6 +49,11 @@ export async function handlerLogin(req: express.Request, res: express.Response) 
     if (!login) {
         throw new UnauthorizedError ("Incorrect email or password")
     }
-    const userReturn: UserResponse = user;
-    return res.status(200).json(userReturn);
+    
+    return res.status(200).json({
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+    } satisfies UserResponse);
 }
