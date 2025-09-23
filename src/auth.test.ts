@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { makeJWT, validateJWT, hashPassword, checkPasswordHash } from "./auth";
+import { makeJWT, validateJWT, hashPassword, checkPasswordHash, getBearerToken } from "./auth";
 import { UnauthorizedError } from "./error_handler.js";
+import { Request } from "express";
 
 describe("Password Hashing", () => {
   const password1 = "correctPassword123!";
@@ -38,4 +39,23 @@ describe("Password Hashing", () => {
 
 
 });
+
+describe("Authorization Token", () => {
+    it("should return the token Authorization header is valid", () => {
+        const mockRequest = {
+            get: (header: string) => header === "Authorization" ? "Bearer my-token-123" : undefined,
+        } as Partial<Request> as Request;
+
+        const token = getBearerToken(mockRequest);
+        expect(token).toBe("my-token-123");
+    })
+
+    it("throws when Authorization header is missing", () => {
+        const mockRequest = {
+            get: () => undefined,
+        } as Partial<Request> as Request;
+
+        expect(() => getBearerToken(mockRequest)).toThrow(UnauthorizedError);
+    });
+})
 

@@ -5,7 +5,6 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { handlerReadiness } from "./handler_readiness.js";
 import { middlewareLogResponses, middlewareMetricsInc } from "./middleware.js";
 import { handlerHits, handlerReset } from "./handler_hits.js";
-import { handlerValidate } from "./handler_validate.js";
 import { errorHandler } from "./error_handler.js";
 import { config } from "./config.js";
 import { handlerCreateUser, handlerLogin } from "./handler_users.js";

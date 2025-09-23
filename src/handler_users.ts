@@ -2,7 +2,8 @@ import express from "express";
 import { createUser, getUserByEmail } from "./db/queries/users.js"
 import { NewUser } from "./db/schema.js"
 import { BadRequestError, UnauthorizedError } from "./error_handler.js";
-import { hashPassword, checkPasswordHash } from "./auth.js";
+import { hashPassword, checkPasswordHash, makeJWT } from "./auth.js";
+import { config } from "./config.js";
 
 export type UserResponse = Omit<NewUser, "hashed_password">
 
@@ -37,9 +38,14 @@ export async function handlerLogin(req: express.Request, res: express.Response) 
     type parameters = {
         email: string;
         password: string;
+        expiresInSeconds?: number;
     }
     
     const params: parameters = req.body;
+
+    if (!params.expiresInSeconds || params.expiresInSeconds > 3600) {
+        params.expiresInSeconds = 3600;
+    }
 
     const user = await getUserByEmail(params.email);
     if (!user) {
@@ -50,10 +56,14 @@ export async function handlerLogin(req: express.Request, res: express.Response) 
         throw new UnauthorizedError ("Incorrect email or password")
     }
     
+    const token = makeJWT(user.id, params.expiresInSeconds, config.api.jwt_secret)
+    
+
     return res.status(200).json({
         id: user.id,
-        email: user.email,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-    } satisfies UserResponse);
+        email: user.email,
+        token: token,
+    });
 }

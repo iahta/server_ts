@@ -2,18 +2,22 @@ import express from "express";
 import { BadRequestError, NotFoundError } from "./error_handler.js";
 import { NewChirp } from "./db/schema.js";
 import { createChirp, getAllChirps, getChirp } from "./db/queries/chirps.js";
+import { getBearerToken, validateJWT } from "./auth.js";
+import { config } from "./config.js"
 
 export async function handlerChirp(req: express.Request, res: express.Response) {
     type parameters = {
         body: string,
-        userId: string,
     }
+
+    const token = getBearerToken(req);
+    const userId = validateJWT(token, config.api.jwt_secret);
 
     const params: parameters = req.body;
     const cleanChirp = validateChirp(params.body)
     const chirp: NewChirp = {
         body: cleanChirp,
-        user_id: params.userId,
+        user_id: userId,
     }
 
     const newChirp = await createChirp(chirp);

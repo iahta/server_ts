@@ -1,6 +1,7 @@
 import * as bcrypt from "bcrypt";
-import * as jwt from "jsonwebtoken"
-import { UnauthorizedError } from "./error_handler";
+import jwt from "jsonwebtoken"
+import { UnauthorizedError } from "./error_handler.js";
+import express from 'express';
 
 
 export async function hashPassword(password: string): Promise<string> {
@@ -35,4 +36,24 @@ export function validateJWT(tokenString: string, secret: string): string {
     } catch(err) {
         throw new UnauthorizedError("Unable to authenticate");
     }
+}
+
+export function getBearerToken(req: express.Request): string {
+    const authHeader = req.get("Authorization");
+    if (!authHeader) {
+        throw new UnauthorizedError("Request not allowed");
+    }
+
+    const prefix = "Bearer ";
+    if (!authHeader.startsWith(prefix)) {
+        throw new UnauthorizedError("Invalid Authorization format");
+    }
+
+    const token = authHeader.slice(prefix.length).trim();
+
+    if (!token) {
+        throw new UnauthorizedError("Missing token");
+    }
+
+    return token;
 }
