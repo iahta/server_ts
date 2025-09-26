@@ -7,7 +7,7 @@ import { middlewareLogResponses, middlewareMetricsInc } from "./middleware.js";
 import { handlerHits, handlerReset } from "./handler_hits.js";
 import { errorHandler } from "./error_handler.js";
 import { config } from "./config.js";
-import { handlerCreateUser, handlerLogin } from "./handler_users.js";
+import { handlerCreateUser, handlerLogin, handlerRefresh, handlerRevoke } from "./handler_users.js";
 import { handlerAllChirps, handlerChirp, handlerGetChirp } from "./handler_chirps.js";
 
 const migrationClient = postgres(config.db.dbURL, { max: 1});
@@ -27,6 +27,8 @@ app.post("/admin/reset", handlerReset);
 app.post("/api/chirps", handlerChirp);
 app.post("/api/users", handlerCreateUser);
 app.post("/api/login", handlerLogin);
+app.post("/api/refresh", handlerRefresh);
+app.post("/api/revoke", handlerRevoke);
 
 app.use(errorHandler);
 app.listen(config.api.port, () => {

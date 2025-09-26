@@ -11,7 +11,7 @@ export async function handlerChirp(req: express.Request, res: express.Response) 
     }
 
     const token = getBearerToken(req);
-    const userId = validateJWT(token, config.api.jwt_secret);
+    const userId = validateJWT(token, config.jwt.secret);
 
     const params: parameters = req.body;
     const cleanChirp = validateChirp(params.body)

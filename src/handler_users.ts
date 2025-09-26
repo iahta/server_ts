@@ -1,9 +1,10 @@
 import express from "express";
 import { createUser, getUserByEmail } from "./db/queries/users.js"
-import { NewUser } from "./db/schema.js"
+import { NewRefreshToken, NewUser } from "./db/schema.js"
 import { BadRequestError, UnauthorizedError } from "./error_handler.js";
-import { hashPassword, checkPasswordHash, makeJWT } from "./auth.js";
+import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken, getBearerToken } from "./auth.js";
 import { config } from "./config.js";
+import { revokeRefreshToken, saveRefreshToken, userForRefreshToken } from "./db/queries/refresh_tokens.js";
 
 export type UserResponse = Omit<NewUser, "hashed_password">
 
@@ -34,36 +35,72 @@ export async function handlerCreateUser(req: express.Request, res: express.Respo
     } satisfies UserResponse);
 }
 
+type LoginResponse = UserResponse & {
+    token: string,
+    refreshToken: string;
+};
+
 export async function handlerLogin(req: express.Request, res: express.Response) {
     type parameters = {
         email: string;
         password: string;
-        expiresInSeconds?: number;
     }
     
     const params: parameters = req.body;
-
-    if (!params.expiresInSeconds || params.expiresInSeconds > 3600) {
-        params.expiresInSeconds = 3600;
-    }
-
+    
     const user = await getUserByEmail(params.email);
     if (!user) {
         throw new BadRequestError ("Unable to find user")
     }
-    const login = await checkPasswordHash(params.password, user.hashed_password)
-    if (!login) {
+
+    const matching = await checkPasswordHash(params.password, user.hashed_password)
+    if (!matching) {
         throw new UnauthorizedError ("Incorrect email or password")
     }
     
-    const token = makeJWT(user.id, params.expiresInSeconds, config.api.jwt_secret)
-    
+    const access_token = makeJWT(user.id, config.jwt.defaultDuration, config.jwt.secret);
+    const refreshToken = await makeRefreshToken();
+    const saved = await saveRefreshToken(user.id, refreshToken);
+    if (!saved) {
+        throw new UnauthorizedError("couldn't save refresh token");
+    }
 
     return res.status(200).json({
         id: user.id,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         email: user.email,
-        token: token,
-    });
+        token: access_token,
+        refreshToken: refreshToken,
+    } satisfies LoginResponse);
+}
+
+export async function handlerRefresh(req: express.Request, res: express.Response) {
+    let refreshToken = getBearerToken(req);
+
+    const result = await userForRefreshToken(refreshToken);
+    if (!result) {
+        throw new UnauthorizedError ("invalid refresh token")
+    }
+
+    const user = result.user;
+    const accessToken = makeJWT(
+        user.id,
+        config.jwt.defaultDuration,
+        config.jwt.secret,
+    );
+
+    type response = {
+        token: string;
+    }
+
+    res.status(200).json({
+        token: accessToken,
+    } satisfies response);
+}
+
+export async function handlerRevoke(req: express.Request, res: express.Response) {
+    const refreshToken = getBearerToken(req);
+    await revokeRefreshToken(refreshToken);
+    res.status(204).send();
 }
