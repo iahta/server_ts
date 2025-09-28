@@ -1,8 +1,8 @@
 import express from "express";
-import { createUser, getUserByEmail } from "./db/queries/users.js"
+import { createUser, getUserByEmail, getUserByID, updateUser } from "./db/queries/users.js"
 import { NewRefreshToken, NewUser } from "./db/schema.js"
 import { BadRequestError, UnauthorizedError } from "./error_handler.js";
-import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken, getBearerToken } from "./auth.js";
+import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken, getBearerToken, validateJWT } from "./auth.js";
 import { config } from "./config.js";
 import { revokeRefreshToken, saveRefreshToken, userForRefreshToken } from "./db/queries/refresh_tokens.js";
 
@@ -104,3 +104,25 @@ export async function handlerRevoke(req: express.Request, res: express.Response)
     await revokeRefreshToken(refreshToken);
     res.status(204).send();
 }
+
+export async function handlerUpdateUserInfo(req: express.Request, res: express.Response) {
+   type parameters = {
+        email: string;
+        password: string;
+   }
+   
+    const token = getBearerToken(req);
+    const userID = validateJWT(token, config.jwt.secret);
+    const params: parameters = req.body;
+    const hashed_password = await hashPassword(params.password);
+
+    const updatedUser = await updateUser(userID, params.email, hashed_password);
+
+    return res.status(200).json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+    } satisfies UserResponse);
+
+}   
