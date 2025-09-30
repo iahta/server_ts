@@ -1,7 +1,7 @@
 import express from "express";
-import { createUser, getUserByEmail, getUserByID, updateUser } from "./db/queries/users.js"
+import { createUser, getUserByEmail, getUserByID, isChirpyRed, updateUser } from "./db/queries/users.js"
 import { NewRefreshToken, NewUser } from "./db/schema.js"
-import { BadRequestError, UnauthorizedError } from "./error_handler.js";
+import { BadRequestError, NotFoundError, UnauthorizedError } from "./error_handler.js";
 import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken, getBearerToken, validateJWT } from "./auth.js";
 import { config } from "./config.js";
 import { revokeRefreshToken, saveRefreshToken, userForRefreshToken } from "./db/queries/refresh_tokens.js";
@@ -32,7 +32,8 @@ export async function handlerCreateUser(req: express.Request, res: express.Respo
         email: user.email,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
-    } satisfies UserResponse);
+        isChirpyRed: user.is_chirpy_red
+    });
 }
 
 type LoginResponse = UserResponse & {
@@ -70,9 +71,10 @@ export async function handlerLogin(req: express.Request, res: express.Response) 
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         email: user.email,
+        isChirpyRed: user.is_chirpy_red,
         token: access_token,
         refreshToken: refreshToken,
-    } satisfies LoginResponse);
+    });
 }
 
 export async function handlerRefresh(req: express.Request, res: express.Response) {
@@ -123,6 +125,28 @@ export async function handlerUpdateUserInfo(req: express.Request, res: express.R
         email: updatedUser.email,
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
-    } satisfies UserResponse);
+        isChirpyRed: updatedUser.is_chirpy_red
+    });
 
 }   
+
+export async function handlerIsChirpyRed(req: express.Request, res: express.Response) {
+    type parameters = {
+        event: string;
+        data: {
+            userId: string
+        }
+    }
+
+    const params: parameters = req.body;
+    if (params.event !== "user.upgraded") {
+        return res.status(204).send();
+    }
+
+    const user = getUserByID(params.data.userId);
+    if (!user) {
+        throw new NotFoundError("unable to locate user");
+    }
+    await isChirpyRed(params.data.userId);
+    return res.status(204).send();
+}

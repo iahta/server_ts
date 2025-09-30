@@ -34,3 +34,10 @@ export async function updateUser(userID: string, email: string, password: string
         .returning();
     return result
 }
+
+export async function isChirpyRed(userID: string) {
+    await db
+    .update(users)
+    .set({is_chirpy_red: true})
+    .where(eq(users.id, userID));
+}
