@@ -1,6 +1,6 @@
 import * as bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
-import { UnauthorizedError } from "./error_handler.js";
+import { ForbiddenError, UnauthorizedError } from "./error_handler.js";
 import express from 'express';
 import { NewRefreshToken } from "./db/schema.js";
 import { randomBytes } from "crypto";
