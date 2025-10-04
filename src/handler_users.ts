@@ -2,7 +2,7 @@ import express from "express";
 import { createUser, getUserByEmail, getUserByID, isChirpyRed, updateUser } from "./db/queries/users.js"
 import { NewRefreshToken, NewUser } from "./db/schema.js"
 import { BadRequestError, NotFoundError, UnauthorizedError } from "./error_handler.js";
-import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken, getBearerToken, validateJWT } from "./auth.js";
+import { hashPassword, checkPasswordHash, makeJWT, makeRefreshToken, getBearerToken, validateJWT, getAPIKey } from "./auth.js";
 import { config } from "./config.js";
 import { revokeRefreshToken, saveRefreshToken, userForRefreshToken } from "./db/queries/refresh_tokens.js";
 
@@ -136,6 +136,11 @@ export async function handlerIsChirpyRed(req: express.Request, res: express.Resp
         data: {
             userId: string
         }
+    }
+
+    const key = getAPIKey(req);
+    if (key !== config.api.polka) {
+        throw new UnauthorizedError("Key does not match");
     }
 
     const params: parameters = req.body;

@@ -2,7 +2,6 @@ import * as bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import { ForbiddenError, UnauthorizedError } from "./error_handler.js";
 import express from 'express';
-import { NewRefreshToken } from "./db/schema.js";
 import { randomBytes } from "crypto";
 
 
@@ -62,4 +61,21 @@ export function getBearerToken(req: express.Request): string {
 
 export function makeRefreshToken() {
     return randomBytes(32).toString("hex");
+}
+
+export function getAPIKey(req: express.Request) {
+    const authHeader = req.get("Authorization");
+    if (!authHeader) {
+        throw new UnauthorizedError("Request not allowed");
+    }
+    const prefix = "ApiKey ";
+    if (!authHeader.startsWith(prefix)) {
+        throw new UnauthorizedError("Invalid Authorization format");
+    }
+
+    const key = authHeader.slice(prefix.length).trim();
+    if (!key) {
+        throw new UnauthorizedError("Missing Key");
+    }
+    return key;
 }
