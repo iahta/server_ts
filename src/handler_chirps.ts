@@ -1,7 +1,7 @@
 import express from "express";
 import { BadRequestError, ForbiddenError, NotFoundError } from "./error_handler.js";
 import { NewChirp } from "./db/schema.js";
-import { createChirp, deleteChirp, getAllChirps, getChirp } from "./db/queries/chirps.js";
+import { createChirp, deleteChirp, getAllChirps, getChirp, getChirpsByID } from "./db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "./auth.js";
 import { config } from "./config.js"
 
@@ -51,7 +51,18 @@ function cleanChirp(chirp: string): string {
     return split.join(" ")
 }
 
-export async function handlerAllChirps(_: express.Request, res: express.Response) {
+export async function handlerAllChirps(req: express.Request, res: express.Response) {
+    let authorId = "";
+    let authorIdQuery = req.query.authorId;
+    if (typeof authorIdQuery === "string") {
+        authorId = authorIdQuery;
+    }
+
+    if (authorId !== "") {
+        const chirps = await getChirpsByID(authorId);
+        return res.status(200).json(chirps);
+    }
+    
     const chirps = await getAllChirps();
     return res.status(200).json(chirps);
 }
