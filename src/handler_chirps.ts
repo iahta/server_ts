@@ -53,9 +53,14 @@ function cleanChirp(chirp: string): string {
 
 export async function handlerAllChirps(req: express.Request, res: express.Response) {
     let authorId = "";
+    let sort = "asc";
     let authorIdQuery = req.query.authorId;
+    let sortQuery = req.query.sort;
     if (typeof authorIdQuery === "string") {
         authorId = authorIdQuery;
+    }
+    if (sortQuery === "desc") {
+        sort = sortQuery
     }
 
     if (authorId !== "") {
@@ -63,7 +68,7 @@ export async function handlerAllChirps(req: express.Request, res: express.Respon
         return res.status(200).json(chirps);
     }
     
-    const chirps = await getAllChirps();
+    const chirps = await getAllChirps(sort);
     return res.status(200).json(chirps);
 }
 
